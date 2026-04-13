@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Goals System</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0f0f0f;
+    color:white;
+    display:flex;
+}
+
+/* Sidebar */
+.sidebar{
+    width:240px;
+    background:#151515;
+    height:100vh;
+    padding:15px;
+    position:fixed;
+}
+
+.menu button{
+    width:100%;
+    padding:12px;
+    margin:5px 0;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:#222;
+    color:white;
+    transition:0.3s;
+}
+
+.menu button:hover{
+    background:#00ffd0;
+    color:black;
+}
+
+/* Pages */
+.main{
+    margin-left:250px;
+    padding:20px;
+    width:100%;
+}
+
+.page{
+    display:none;
+    animation:fade 0.4s ease;
+}
+
+.active{
+    display:block;
+}
+
+@keyframes fade{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+/* Cards */
+.card{
+    background:#1c1c1c;
+    padding:15px;
+    border-radius:12px;
+    margin-top:10px;
+}
+
+/* items */
+.item{
+    display:flex;
+    justify-content:space-between;
+    padding:10px;
+    margin-top:8px;
+    background:#222;
+    border-radius:8px;
+}
+
+/* buttons */
+button{
+    border:none;
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.add{
+    background:#00ffd0;
+}
+
+.delete{
+    background:#ff4d4d;
+    color:white;
+}
+
+.reset{
+    background:#ffb703;
+}
+
+/* progress */
+.bar{
+    height:10px;
+    background:#333;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.fill{
+    height:100%;
+    width:0%;
+    background:#00ffd0;
+    transition:0.4s;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+<h3>📌 القائمة</h3>
+
+<div class="menu">
+<button onclick="show('special')">⭐ مهام خاصة</button>
+<button onclick="show('daily')">📅 مهام يومية</button>
+<button onclick="show('tasks')">📝 المهام</button>
+<button onclick="show('reports')">📊 التقارير</button>
+</div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+<!-- SPECIAL TASKS -->
+<div id="special" class="page active">
+<h2>⭐ المهام الخاصة (لا تتكرر)</h2>
+
+<div class="card">
+<input id="specialInput" placeholder="مهمة خاصة">
+<button class="add" onclick="addSpecial()">إضافة</button>
+</div>
+
+<div class="card" id="specialList"></div>
+</div>
+
+<!-- DAILY -->
+<div id="daily" class="page">
+<h2>📅 المهام اليومية (تتكرر)</h2>
+
+<div class="card">
+<input id="dailyInput" placeholder="مهمة يومية">
+<button class="add" onclick="addDaily()">إضافة</button>
+</div>
+
+<div class="card" id="dailyList"></div>
+</div>
+
+<!-- TASKS -->
+<div id="tasks" class="page">
+<h2>📝 المهام اليومية (تذكيرات)</h2>
+
+<div class="card">
+<input id="taskInput" placeholder="تذكير">
+<button class="add" onclick="addTask()">إضافة</button>
+</div>
+
+<div class="card" id="taskList"></div>
+</div>
+
+<!-- REPORTS -->
+<div id="reports" class="page">
+<h2>📊 التقارير</h2>
+
+<div class="card">
+<p>نسبة الإنجاز التجريبية</p>
+<div class="bar"><div class="fill" id="bar"></div></div>
+<p id="percent"></p>
+
+<button class="reset" onclick="resetReport()">إعادة ضبط التقرير</button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* DATA */
+let special = JSON.parse(localStorage.getItem("special") || "[]");
+let daily = JSON.parse(localStorage.getItem("daily") || "[]");
+let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+
+function save(){
+    localStorage.setItem("special", JSON.stringify(special));
+    localStorage.setItem("daily", JSON.stringify(daily));
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+/* NAV */
+function show(page){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(page).classList.add("active");
+}
+
+/* SPECIAL (no repeat) */
+function addSpecial(){
+    let v = document.getElementById("specialInput").value;
+    if(!v) return;
+
+    special.push({text:v});
+    document.getElementById("specialInput").value="";
+    save();
+    render();
+}
+
+function deleteSpecial(i){
+    special.splice(i,1);
+    save();
+    render();
+}
+
+/* DAILY (repeat) */
+function addDaily(){
+    let v = document.getElementById("dailyInput").value;
+    if(!v) return;
+
+    daily.push({text:v, done:false});
+    document.getElementById("dailyInput").value="";
+    save();
+    render();
+}
+
+function toggleDaily(i){
+    daily[i].done = !daily[i].done;
+    save();
+    render();
+}
+
+function deleteDaily(i){
+    daily.splice(i,1);
+    save();
+    render();
+}
+
+/* TASKS */
+function addTask(){
+    let v = document.getElementById("taskInput").value;
+    if(!v) return;
+
+    tasks.push({text:v});
+    document.getElementById("taskInput").value="";
+    save();
+    render();
+}
+
+function deleteTask(i){
+    tasks.splice(i,1);
+    save();
+    render();
+}
+
+/* REPORT */
+function resetReport(){
+    localStorage.clear();
+    special=[]; daily=[]; tasks=[];
+    render();
+}
+
+/* RENDER */
+function render(){
+
+    /* SPECIAL */
+    let s = document.getElementById("specialList");
+    s.innerHTML="";
+    special.forEach((x,i)=>{
+        s.innerHTML += `
+        <div class="item">
+            <span>${x.text}</span>
+            <button class="delete" onclick="deleteSpecial(${i})">🗑️</button>
+        </div>`;
+    });
+
+    /* DAILY */
+    let d = document.getElementById("dailyList");
+    d.innerHTML="";
+    let done = 0;
+
+    daily.forEach((x,i)=>{
+        if(x.done) done++;
+
+        d.innerHTML += `
+        <div class="item">
+            <span>${x.text}</span>
+            <div>
+                <button onclick="toggleDaily(${i})">✔</button>
+                <button class="delete" onclick="deleteDaily(${i})">🗑️</button>
+            </div>
+        </div>`;
+    });
+
+    /* TASKS */
+    let t = document.getElementById("taskList");
+    t.innerHTML="";
+    tasks.forEach((x,i)=>{
+        t.innerHTML += `
+        <div class="item">
+            <span>${x.text}</span>
+            <button class="delete" onclick="deleteTask(${i})">🗑️</button>
+        </div>`;
+    });
+
+    /* REPORT */
+    let total = daily.length || 1;
+    let percent = Math.round((done/total)*100);
+
+    document.getElementById("percent").innerText = percent + "%";
+    document.getElementById("bar").style.width = percent + "%";
+}
+
+render();
+
+</script>
+
+</body>
+</html>
